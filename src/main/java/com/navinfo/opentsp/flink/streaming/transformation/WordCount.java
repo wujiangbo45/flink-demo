@@ -1,4 +1,4 @@
-package com.navinfo.opentsp.flink.streaming;
+package com.navinfo.opentsp.flink.streaming.transformation;
 
 import akka.stream.impl.CollectorState;
 import org.apache.flink.api.common.functions.FlatMapFunction;
