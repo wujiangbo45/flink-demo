@@ -12,6 +12,8 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.queryablestate.client.QueryableStateClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -23,11 +25,12 @@ import static org.apache.flink.api.common.typeinfo.BasicTypeInfo.*;
 public class QueryTboxOnOfflineStates {
 
 
+    private static final Logger logger = LoggerFactory.getLogger(QueryTboxOnOfflineStates.class);
 
     public static void main(String[] args) throws InterruptedException, IOException, ExecutionException {
-        String jobid = "d47fbbaf8b504733d024ac86edae1bfd";
-
-        QueryableStateClient client = new QueryableStateClient("localhost", 8081);
+        String jobid = "9a34d9f71909bcd4269de837cd6b4088";
+        // KvStateClientProxy端口号
+        QueryableStateClient client = new QueryableStateClient("localhost", 9069);
         ExecutionConfig config = new ExecutionConfig();
         config.setMaxParallelism(1);
         client.setExecutionConfig(config);
@@ -37,14 +40,16 @@ public class QueryTboxOnOfflineStates {
                 Types.POJO(TboxDataPojo.class)
         );
         Long key = 73443389L;
-        JobID jobID = new JobID();
 
         CompletableFuture<ValueState<TboxDataPojo>> kvState;
         kvState = client.getKvState(JobID.fromHexString(jobid), "terminal-online", key, LONG_TYPE_INFO, onlineStateDesc);
-        kvState.get();
-        kvState.thenAccept(tboxDataPojoValueState -> {
-            System.out.println(tboxDataPojoValueState);
+        kvState.thenAccept(response -> {
+            try {
+                logger.info("查询到数据:{}",response.value().toString());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
-        Thread.sleep(5000L);
+        Thread.sleep(50000L);
     }
 }

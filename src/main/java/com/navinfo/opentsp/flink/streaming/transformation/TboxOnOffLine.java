@@ -2,6 +2,7 @@ package com.navinfo.opentsp.flink.streaming.transformation;
 
 import com.alibaba.fastjson.JSON;
 import com.navinfo.opentsp.flink.pojo.TboxDataPojo;
+import com.navinfo.opentsp.flink.streaming.source.Flink2MysqlSource;
 import javafx.scene.control.Alert;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.common.state.ListStateDescriptor;
@@ -17,21 +18,24 @@ import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 import java.util.Optional;
 
 public class TboxOnOffLine {
+
+    private static final Logger logger = LoggerFactory.getLogger(TboxDataPojo.class);
     // 终端模块上下线
     // 某个终端连续上传5个点表示上线，一分钟不上传则下线
     public static void main(String[] args) throws Exception {
-
+        logger.info("start");
         Configuration config = new Configuration();
 
         //启用Queryable State服务
         config.setBoolean(QueryableStateOptions.ENABLE_QUERYABLE_STATE_PROXY_SERVER, true);
-
-
+        config.setInteger("rest.port",8333);
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(config);
         DataStreamSource<String> stringDataStreamSource = env.socketTextStream("localhost", 9999);
         stringDataStreamSource.map(value -> JSON.parseObject(value, TboxDataPojo.class))
