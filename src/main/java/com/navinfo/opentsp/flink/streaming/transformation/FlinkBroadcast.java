@@ -34,7 +34,7 @@ public class FlinkBroadcast {
                         returns(Types.MAP(Types.LONG,Types.POJO(AreaFenceInfo.class)))
                         .broadcast(CONFIG_DESCRIPTOR);
         DataStreamSource<String> integerDataStreamSource = env.socketTextStream("localhost", 9999);
-        integerDataStreamSource.setBufferTimeout(5000L).connect(broadcast).process(new BroadcastProcessFunction<String, Map<Long, AreaFenceInfo>, Object>() {
+        integerDataStreamSource.connect(broadcast).process(new BroadcastProcessFunction<String, Map<Long, AreaFenceInfo>, Object>() {
             @Override
             public void processElement(String value, ReadOnlyContext ctx, Collector<Object> out) throws Exception {
                 HeapBroadcastState<String,Map<Long,AreaFenceInfo>> config = (HeapBroadcastState)ctx.getBroadcastState(CONFIG_DESCRIPTOR);

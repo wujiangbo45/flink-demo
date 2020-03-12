@@ -43,7 +43,7 @@ public class Flink2MysqlSource extends RichSourceFunction<List<AreaFenceInfo>> {
                             return info;
                         }).collect(Collectors.toList());
                 ctx.collect(collect);
-                Thread.sleep(5000);
+                Thread.sleep(60000);
                 }
             } catch(InterruptedException e){
                 e.printStackTrace();
