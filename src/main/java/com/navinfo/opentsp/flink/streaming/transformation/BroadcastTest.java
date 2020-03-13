@@ -18,8 +18,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class FlinkBroadcast {
-    private static final Logger logger = LoggerFactory.getLogger(FlinkBroadcast.class);
+public class BroadcastTest {
+    private static final Logger logger = LoggerFactory.getLogger(BroadcastTest.class);
 
     // 加载mysql数据,并且将数据广播出去,固定时间加载一次
     public static void main(String[] args) throws Exception {
@@ -34,6 +34,7 @@ public class FlinkBroadcast {
                         returns(Types.MAP(Types.LONG,Types.POJO(AreaFenceInfo.class)))
                         .broadcast(CONFIG_DESCRIPTOR);
         DataStreamSource<String> integerDataStreamSource = env.socketTextStream("localhost", 9999);
+        // 数据流与广播流连接
         integerDataStreamSource.connect(broadcast).process(new BroadcastProcessFunction<String, Map<Long, AreaFenceInfo>, Object>() {
             @Override
             public void processElement(String value, ReadOnlyContext ctx, Collector<Object> out) throws Exception {
@@ -50,6 +51,7 @@ public class FlinkBroadcast {
                 BroadcastState<String, Map<Long,AreaFenceInfo>> state =  ctx.getBroadcastState(CONFIG_DESCRIPTOR);
                 state.put("area_fence_info", value);
             }
+
         }).print();
         env.execute("FlinkLoadMysqlSource");
     }

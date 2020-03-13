@@ -28,9 +28,39 @@ public class QueryTboxOnOfflineStates {
     private static final Logger logger = LoggerFactory.getLogger(QueryTboxOnOfflineStates.class);
 
     public static void main(String[] args) throws InterruptedException, IOException, ExecutionException {
-        String jobid = "9a34d9f71909bcd4269de837cd6b4088";
-        // KvStateClientProxy端口号
+        // jobid 可以在开启webtUI后调用 /jobs/overview接口根据jobname获取,数据如下格式
+        /**
+         * {
+         *     "jobs":[
+         *         {
+         *             "jid":"e56db7caf1933c5ae75034fad5acfb42",
+         *             "name":"onOffline",
+         *             "state":"RUNNING",
+         *             "start-time":1584086100911,
+         *             "end-time":-1,
+         *             "duration":78280,
+         *             "last-modification":1584086101295,
+         *             "tasks":{
+         *                 "total":9,
+         *                 "created":0,
+         *                 "scheduled":0,
+         *                 "deploying":0,
+         *                 "running":9,
+         *                 "finished":0,
+         *                 "canceling":0,
+         *                 "canceled":0,
+         *                 "failed":0,
+         *                 "reconciling":0
+         *             }
+         *         }
+         *     ]
+         * }
+         */
+
+        String jobid = "bfc7521cd27972b9785673b1dbf71a66";
+        // KvStateClientProxy端口号,开启状态服务器后会提示端口号
         QueryableStateClient client = new QueryableStateClient("localhost", 9069);
+
         ExecutionConfig config = new ExecutionConfig();
         config.setMaxParallelism(1);
         client.setExecutionConfig(config);

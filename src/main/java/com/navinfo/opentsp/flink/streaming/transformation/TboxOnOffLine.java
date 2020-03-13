@@ -28,13 +28,14 @@ public class TboxOnOffLine {
 
     private static final Logger logger = LoggerFactory.getLogger(TboxDataPojo.class);
     // 终端模块上下线
-    // 某个终端连续上传5个点表示上线，一分钟不上传则下线
+    // 某个终端连续上传5个点表示上线，一分钟不上传则设置终端下线
     public static void main(String[] args) throws Exception {
         logger.info("start");
         Configuration config = new Configuration();
 
         //启用Queryable State服务
         config.setBoolean(QueryableStateOptions.ENABLE_QUERYABLE_STATE_PROXY_SERVER, true);
+        // flink web ui端口号，默认8081
         config.setInteger("rest.port",8333);
         StreamExecutionEnvironment env = StreamExecutionEnvironment.createLocalEnvironmentWithWebUI(config);
         DataStreamSource<String> stringDataStreamSource = env.socketTextStream("localhost", 9999);
@@ -70,6 +71,7 @@ public class TboxOnOffLine {
                                 "timerState",
                                 Types.LONG);
 
+                        // 设置状态值为可查询状态
                         onlineStateDesc.setQueryable("terminal-online");
 
                         timerState = getRuntimeContext().getState(timerStateDesc);
