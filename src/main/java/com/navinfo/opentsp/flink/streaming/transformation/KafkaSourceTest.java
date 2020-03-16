@@ -3,16 +3,24 @@ package com.navinfo.opentsp.flink.streaming.transformation;
 import com.navinfo.opentsp.flink.pojo.TboxDataPojo;
 import com.navinfo.opentsp.platform.location.protocol.common.LCLocationData;
 import com.twitter.chill.protobuf.ProtobufSerializer;
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.configuration.QueryableStateOptions;
+import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.connectors.kafka.FlinkKafkaConsumer;
+import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer;
 import org.apache.flink.streaming.connectors.kafka.KafkaDeserializationSchema;
+import org.apache.flink.streaming.connectors.kafka.KafkaSerializationSchema;
+import org.apache.flink.streaming.connectors.kafka.internals.KeyedSerializationSchemaWrapper;
+import org.apache.flink.streaming.util.serialization.KeyedSerializationSchema;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.util.Properties;
 
 public class KafkaSourceTest {
@@ -95,9 +103,22 @@ public class KafkaSourceTest {
         };
 
 
-        env.addSource(new FlinkKafkaConsumer<>("locationDataPB", deserializationSchemaForProto ,properties))
-        .filter(value -> value.getTerminalId() != 1L).print();
+        SingleOutputStreamOperator<LCLocationData.LocationData> locationDataPB = env.addSource(new FlinkKafkaConsumer<>("locationDataPB", deserializationSchemaForProto, properties))
+                .filter(value -> value.getTerminalId() != 1L);
 
+
+        Properties propertiesProducer = new Properties();
+        propertiesProducer.setProperty("bootstrap.servers", "10.30.50.214:21492");
+        propertiesProducer.setProperty("transaction.timeout.ms",1000*60*5+"");
+        FlinkKafkaProducer<LCLocationData.LocationData> producer =
+                new FlinkKafkaProducer<>("wujiangbo-flink",
+                                                (KafkaSerializationSchema<LCLocationData.LocationData>)
+                                                        (element, timestamp) ->
+                                                                new ProducerRecord<>("wujiangbo-flink", String.valueOf(element.getTerminalId()).getBytes(), (element.getTerminalId() + "," + element.getGpsDate()).getBytes()),
+                                                propertiesProducer,
+                                                FlinkKafkaProducer.Semantic.EXACTLY_ONCE);
+        locationDataPB.addSink(producer).name("write-kafka");
+//        locationDataPB.print();
         env.execute("kafka-consumer-test");
 
     }
